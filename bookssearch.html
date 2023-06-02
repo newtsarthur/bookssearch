@@ -1,0 +1,30 @@
+<!doctype html>
+<html> 
+ <head> 
+  <title>Buscador de Livros</title> 
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css"> 
+  <style>.synopsis{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden;}</style> 
+ </head> 
+ <body> 
+  <div class="container mt-5"> 
+   <h1 class="mb-4">Buscador de Livros</h1> 
+   <form id="search-form" class="mb-4"> 
+    <div class="input-group"> 
+     <input type="text" id="query" class="form-control" placeholder="Digite o livro desejado"> 
+     <div class="input-group-append"> <button type="submit" class="btn btn-primary">Buscar</button> 
+     </div> 
+    </div> 
+   </form> 
+   <div id="results"></div> 
+  </div> 
+  <script>
+    const form=document.getElementById("search-form");
+    const queryInput=document.getElementById("query");
+    const resultsDiv=document.getElementById("results");
+    form.addEventListener("submit",function(event){event.preventDefault();const query=queryInput.value;search(query);});
+    async function search(query){resultsDiv.innerHTML="";try{const apiUrl=`https://openlibrary.org/search.json?title=${encodeURIComponent(query)}&limit=5`;const response=await fetch(apiUrl);const data=await response.json();if(data.docs&&data.docs.length>0){data.docs.forEach(async book=>{const title=book.title?book.title:"Título desconhecido";const author=book.author_name?book.author_name.join(", "):"Autor desconhecido";const coverImage=`https://covers.openlibrary.org/b/id/${book.cover_i}-M.jpg`;const resultElement=document.createElement("div");resultElement.classList.add("card","mb-3");resultElement.innerHTML=`<div class="row no-gutters"><div class="col-md-2"><img src="${coverImage}" class="card-img" alt="Capa do livro"></div><div class="col-md-10"><div class="card-body"><h5 class="card-title">${title}</h5><p class="card-text">Autor: ${author}</p><p class="card-text synopsis"></p></div></div></div>`;resultsDiv.appendChild(resultElement);const synopsisApiUrl=`https://openlibrary.org${book.key}.json`;const synopsisResponse=await fetch(synopsisApiUrl);const synopsisData=await synopsisResponse.json();const synopsis=synopsisData&&synopsisData.description?synopsisData.description.value:"Sinopse não disponível";const synopsisElement=resultElement.querySelector(".synopsis");synopsisElement.textContent=`Sinopse: ${synopsis}`;});}else{resultsDiv.innerHTML="<p>Nenhum livro encontrado.</p>";}}catch(error){console.error("Erro na busca:",error);resultsDiv.innerHTML="<p>Ocorreu um erro na busca.</p>";}}
+    function limitarSinopse(element){const lineHeight=parseFloat(window.getComputedStyle(element).lineHeight);const maxHeight=lineHeight*3;element.style.maxHeight=`${maxHeight}px`;}
+    window.addEventListener("load",function(){const sinopses=document.querySelectorAll(".synopsis");sinopses.forEach(function(sinopse){limitarSinopse(sinopse);});});
+  </script> 
+ </body>
+</html>
